@@ -164,8 +164,8 @@ uperf_log_flush()
 		}
 	}
 	/* reset the counters */
-	(void) memset(log, 0, sizeof (uperf_log_t));
 	(void) pthread_mutex_unlock(&log->lock);
+	(void) memset(log, 0, sizeof (uperf_log_t));
 
 	return (UPERF_SUCCESS);
 }
