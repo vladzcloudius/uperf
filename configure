@@ -1308,6 +1308,7 @@ Optional Features:
   --enable-udp            Turn on udp support
   --enable-rds            Turn on rds support
   --enable-sctp           Turn on sctp support
+  --enable-threads-only   Use only threads
   --enable-ssl            Turn on ssl support
 
 Optional Packages:
@@ -3509,6 +3510,7 @@ netstat_default="yes"
 udp_default="yes"
 rds_default="no"
 sctp_default="yes"
+threads_only_default="no"
 ssl_default="yes"
 cpc_default="yes"
 
@@ -3540,9 +3542,10 @@ _ACEOF
 
 		good_os="no"
 		sctp_default="yes"
+		threads_only_default="yes"
 		ssl_default="no"
 		cpc_default="no"
-		UPERF_LIBS="$UPERF_LIBS -lrt -lm"
+		UPERF_LIBS="$UPERF_LIBS -lrt -lm -pthread"
 		CFLAGS="-D_GNU_SOURCE $CFLAGS"
 		SCTP_LIBS="-lsctp"
 		SCTP_LIBNAME="sctp"
@@ -3902,6 +3905,23 @@ fi
 rm -f core conftest.err conftest.$ac_objext conftest_ipa8_conftest.oo \
       conftest$ac_exeext conftest.$ac_ext
 
+if test "${enable_threads_only+set}" = set; then
+  threads_only=$enable_threads_only;
+else
+  threads_only=$threads_only_default
+fi
+
+if test "x$threads_only" = "xyes"; then
+        { echo "$as_me:$LINENO: Configuring to use only threads...yes" >&5
+echo $ECHO_N "Configuring to use only threads...yes" >&6; }
+	process_shared_works=no
+
+cat >>confdefs.h <<\_ACEOF
+#define STRAND_THREAD_ONLY 1
+_ACEOF
+else
+
+
 # Check for PTHREAD_PROCESS_SHARED. Have to run it to see if it works
 # as its declared, but does not work on FreeBSD
 LIBS="$UPERF_LIBS"
@@ -4009,7 +4029,7 @@ fi
 fi
 rm -f core *.core core.conftest.* gmon.out bb.out conftest$ac_exeext conftest.$ac_objext conftest.$ac_ext
 fi
-
+fi
 
 # Checks for libraries.
 { echo "$as_me:$LINENO: checking whether to enable cpu performance counters support?" >&5
