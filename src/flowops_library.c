@@ -108,10 +108,9 @@ flowop_rw(strand_t *s, flowop_t *f)
 		return (-1);
 	}
 
-	if (global_shm->killing_all)
+	if (!fo->size)
 		return (-1);
 
-	assert(fo->size > 0);
 	sz = 0;
 	while (sz < fo->size) {
 		if (SIGNALLED(s))
