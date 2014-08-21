@@ -264,10 +264,6 @@ void
 wait_for_strands(uperf_shm_t *shm, int error)
 {
 	int i;
-	static int joined = 0;
-
-	if (joined == 1)
-		return;
 
 	uperf_info("About to join %d threads\n", shm->no_strands);
 
@@ -300,7 +296,6 @@ wait_for_strands(uperf_shm_t *shm, int error)
 			}
 		}
 	}
-	joined = 1;
 }
 
 int
