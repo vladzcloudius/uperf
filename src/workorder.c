@@ -27,6 +27,7 @@
 #include <string.h>
 #include "uperf.h"
 #include "flowops.h"
+#include "logging.h"
 #include "workorder.h"
 
 #define	UPERF_STOP_TXN		"Stop Transaction"
@@ -191,8 +192,10 @@ group_free(group_t *g1)
 	txn_t *t1, *t2;
 	flowop_t *f1, *f2;
 
-	if (g1 == NULL)
+	if (g1 == NULL) {
+		uperf_info("Group is NULL!!!\n");
 		return;
+	}
 	t1 = g1->tlist;
 	while (t1) {
 		t2 = t1;
