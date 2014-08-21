@@ -285,6 +285,7 @@ slave_master(protocol_t *p)
 	uperf_shm_t *shm;
 	group_t *g;
 	int error = 0;
+	int rc = 0;
 
 	if ((shm = slave_init(p)) == NULL) {
 		uperf_error("Error initializing slave\n");
@@ -296,8 +297,8 @@ slave_master(protocol_t *p)
 		uperf_error("error in strand_init_all");
 		slave_handshake_p2_failure("error in strand_init_all",
 		    p, 0);
-		free(shm);
-		return (UPERF_FAILURE);
+		rc = UPERF_FAILURE;
+		goto out;
 	}
 
 	if (shm->rx_no_slave_info > 0) {
@@ -305,9 +306,8 @@ slave_master(protocol_t *p)
 			uperf_error("error in strand_init_all");
 			slave_handshake_p2_failure("error in strand_init_all",
 			    p, 0);
-			free(shm);
-			return (UPERF_FAILURE);
-
+			rc = UPERF_FAILURE;
+			goto out;
 		}
 	}
 
@@ -317,8 +317,8 @@ slave_master(protocol_t *p)
 			strerror(errno));
 		uperf_error("%s\n", msg);
 		slave_handshake_p2_failure(msg, p, 0);
-		free(shm);
-		return (UPERF_FAILURE);
+		rc = UPERF_FAILURE;
+		goto out;
 	}
 
 	if (shm_init_barriers_slave(shm, shm->worklist) != 0) {
@@ -347,6 +347,8 @@ slave_master(protocol_t *p)
 		/* Kill threads on error */
 		strand_killall(shm);
 	}
+
+	uperf_info("Before wait_for_strands\n");
 	wait_for_strands(shm, error);
 	newstat_end(0, AGG_STAT(shm), 0, 0);
 
@@ -359,9 +361,11 @@ slave_master(protocol_t *p)
 	uperf_log_flush();
 	/* fprintf(stderr, "%ld: master-slave exiting\n", getpid()); */
 	p->disconnect(p);
+out:
+	group_free(shm->worklist);
 	free(shm);
 
-	return (0);
+	return rc;
 }
 
 /* Used by Slave to reap children */
@@ -413,6 +417,7 @@ slave()
 {
 	protocol_t	*conn;
 	protocol_t	*slave_conn;
+	int i;
 
 	uperf_log_init(&log);
 
@@ -437,7 +442,7 @@ slave()
 	 * Accept the incomming request and spawn a new worker thread to
 	 * execute the request
 	 */
-	for (;;) {
+	for (i = 0;; i++) {
 		int status;
 		conn = slave_conn->accept(slave_conn, NULL);
 		if (conn == NULL) { /* timeout or poll is interrupted */
@@ -451,16 +456,13 @@ slave()
 			}
 			continue;
 		}
-		status = fork();
-		if (status == 0) {
-			/* child */
-			(void) slave_master(conn);
-			exit(0);
-		} else  {
-			/* parent */
-			uperf_info("forked one\n");
-			destroy_protocol(conn->type, conn);
-		}
 
+		slave_master(conn);
+		destroy_protocol(conn->type, conn);
+		global_shm->killing_all = 0;
 	}
+
+	destroy_protocol(PROTOCOL_TCP, slave_conn);
+
+	return 0;
 }

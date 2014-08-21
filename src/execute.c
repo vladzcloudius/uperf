@@ -191,13 +191,13 @@ group_execute(strand_t *strand, group_t *g)
 	strand->buffer = (char *) calloc(1, group_max_dto_size(g));
 	if (ENABLED_GROUP_STATS(options))
 		stats_update(GROUP_BEGIN, strand, GROUP_STAT(g), 0, 0);
-	for (txn = g->tlist; txn; txn = txn->next) {
+	for (txn = g->tlist; txn && !global_shm->killing_all; txn = txn->next) {
 		barrier_t *b = shm_get_barrier(strand->shmptr, g->groupid,
 				    txn->txnid);
 		strand->strand_state = STRAND_STATE_AT_BARRIER;
 		wait_barrier(b);
 
-		if (global_shm->global_error > 1) {
+		if ((global_shm->global_error > 1) || global_shm->killing_all) {
 			break;
 		}
 		strand->strand_state = STRAND_STATE_EXECUTING;
@@ -208,7 +208,7 @@ group_execute(strand_t *strand, group_t *g)
 		 * Possible values of error are success, failure and
 		 * DURATION_EXPIRED. Duration expiry does not mean failure.
 		 */
-		if (error == UPERF_FAILURE) {
+		if (error == UPERF_FAILURE || global_shm->killing_all) {
 			break;
 		}
 	}

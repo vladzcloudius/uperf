@@ -107,6 +107,10 @@ flowop_rw(strand_t *s, flowop_t *f)
 		uperf_log_msg(UPERF_LOG_ERROR, 0, msg);
 		return (-1);
 	}
+
+	if (global_shm->killing_all)
+		return (-1);
+
 	assert(fo->size > 0);
 	sz = 0;
 	while (sz < fo->size) {

@@ -218,6 +218,11 @@ strand_fini(strand_t *s)
 	protocol_t *ptmp;
 	slave_info_list_t *sil;
 
+	if (!__sync_bool_compare_and_swap(&s->fini_called, 0, 1)) {
+		uperf_info("thread 0x%lx has already been freed\n", s->tid);
+		return;
+	}
+
 	/* Make sure strand is dead */
 	for (i = 0; i < NUM_PROTOCOLS; i++) {
 		if (s->listen_conn[i] != 0) {
@@ -240,6 +245,8 @@ strand_fini(strand_t *s)
 		free(sil);
 		sil = q;
 	}
+
+	uperf_info("Freeing group_t of the thread 0x%lx\n", s->tid);
 	group_free(s->worklist);
 }
 
@@ -262,6 +269,8 @@ wait_for_strands(uperf_shm_t *shm, int error)
 	if (joined == 1)
 		return;
 
+	uperf_info("About to join %d threads\n", shm->no_strands);
+
 	for (i = 0; i < shm->no_strands; i++) {
 		strand_t *s = shm_get_strand(shm, i);
 
@@ -278,11 +287,17 @@ wait_for_strands(uperf_shm_t *shm, int error)
 
 		} else {
 			/* if some error occurs, do NOT wait. */
-			if (!error)
+			if (!error) {
+				uperf_info("joining the thread: 0x%lx\n", s->tid);
 				if (pthread_join(s->tid, 0) != 0) {
 					uperf_log_msg(UPERF_LOG_ERROR, errno,
 					    "pthread join");
 				}
+			} else {
+				uperf_info("detaching the thread: 0x%lx\n", s->tid);
+				pthread_detach(s->tid);
+				strand_fini(s);
+			}
 		}
 	}
 	joined = 1;

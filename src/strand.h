@@ -83,6 +83,7 @@ struct uperf_strand {
 	history_t	*history;
 	uint64_t	hsize;
 	uperf_shm_t	*shmptr;
+	uint8_t		fini_called;
 };
 
 int strand_add_slave(strand_t *, slave_info_t *);

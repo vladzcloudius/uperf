@@ -74,6 +74,7 @@ struct uperf_shm {
 	/* Error handling */
 	uperf_log_t log;
 	int global_error;
+	int killing_all;
 	uint32_t sstate1[NUM_STATES];
 	uint32_t finished;
 	int cleaned_up;
