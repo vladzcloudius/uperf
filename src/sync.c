@@ -37,6 +37,7 @@
 int
 init_barrier(barrier_t *bar, int threshold)
 {
+	bar->unlocked = 0;
 	pthread_rwlockattr_init(&bar->rwattr);
 #ifndef STRAND_THREAD_ONLY
 	if (pthread_rwlockattr_setpshared(&bar->rwattr,
@@ -77,7 +78,12 @@ init_barrier(barrier_t *bar, int threshold)
 int
 unlock_barrier(barrier_t *bar)
 {
-	return (pthread_rwlock_unlock(&bar->barrier));
+	if (!bar->unlocked) {
+		bar->unlocked = 1;
+		return (pthread_rwlock_unlock(&bar->barrier));
+	} else {
+		return -1;
+	}
 }
 
 int
