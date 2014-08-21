@@ -371,6 +371,17 @@ int
 strand_killall(uperf_shm_t *shm)
 {
 	int i;
+	barrier_t *bar;
+
+	// Maybe atomic?
+	global_shm->killing_all = 1;
+
+	// Unlock all barriers
+	for (i = 0; i < shm->worklist->ntxn; i++) {
+		bar = &shm->bar[i];
+		unlock_barrier(bar);
+	}
+
 	for (i = 0; i < shm->no_strands; i++) {
 		strand_t *s = shm_get_strand(shm, i);
 		signal_strand(s, SIGKILL);
