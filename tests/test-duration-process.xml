@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<profile name="test_duration_process.xml">
+  <group nprocs="12">
+        <transaction iterations="1">
+            <flowop type="connect" options="remotehost=$h protocol=udp
+	    wndsz=500k  tcp_nodelay"/>
+        </transaction>
+        <transaction duration="$duration">
+            <flowop type="read" options="size=64"/>
+        </transaction>
+        <transaction iterations="1">
+            <flowop type="disconnect" />
+        </transaction>
+  </group>
+
+</profile>

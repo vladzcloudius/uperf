@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+<profile name="test_throughput.xml">
+  <group nthreads="16">
+        <transaction iterations="1">
+            <flowop type="connect" options="remotehost=$h
+                             protocol=sctp tcp_nodelay"/>
+        </transaction>
+        <transaction duration="$duration">
+            <flowop type="read" options="size=16k"/>
+        </transaction>
+        <transaction iterations="1">
+            <flowop type="disconnect" />
+        </transaction>
+  </group>
+</profile>

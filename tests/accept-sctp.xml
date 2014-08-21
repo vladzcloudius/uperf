@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<profile name="accept-sctp">
+  <group nthreads="4">
+    <transaction iterations="10">
+       <flowop type="accept" options="remotehost=$h protocol=sctp"/>
+    </transaction>
+    <transaction iterations="10">
+       <flowop type="disconnect" />
+    </transaction>
+  </group>
+</profile>
